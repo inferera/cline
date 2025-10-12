@@ -19,10 +19,12 @@ export const useApiConfigurationHandlers = () => {
 	 * @param value - The new value for the field
 	 */
 	const handleFieldChange = async <K extends keyof ApiConfiguration>(field: K, value: ApiConfiguration[K]) => {
+		console.log("handleFieldChange", { field, value, currentConfig: apiConfiguration })
 		const updatedConfig = {
 			...apiConfiguration,
 			[field]: value,
 		}
+		console.log("Updated config:", updatedConfig)
 
 		const protoConfig = convertApiConfigurationToProto(updatedConfig)
 		await ModelsServiceClient.updateApiConfigurationProto(
@@ -30,6 +32,7 @@ export const useApiConfigurationHandlers = () => {
 				apiConfiguration: protoConfig,
 			}),
 		)
+		console.log("Field change completed")
 	}
 
 	/**
@@ -42,17 +45,26 @@ export const useApiConfigurationHandlers = () => {
 	 * @param updates - An object containing the fields to update and their new values
 	 */
 	const handleFieldsChange = async (updates: Partial<ApiConfiguration>) => {
-		const updatedConfig = {
-			...apiConfiguration,
-			...updates,
-		}
+		console.log("handleFieldsChange", { updates, currentConfig: apiConfiguration })
+		try {
+			const updatedConfig = {
+				...apiConfiguration,
+				...updates,
+			}
+			console.log("Updated config:", updatedConfig)
 
-		const protoConfig = convertApiConfigurationToProto(updatedConfig)
-		await ModelsServiceClient.updateApiConfigurationProto(
-			UpdateApiConfigurationRequest.create({
-				apiConfiguration: protoConfig,
-			}),
-		)
+			const protoConfig = convertApiConfigurationToProto(updatedConfig)
+			console.log("Proto config:", protoConfig)
+
+			await ModelsServiceClient.updateApiConfigurationProto(
+				UpdateApiConfigurationRequest.create({
+					apiConfiguration: protoConfig,
+				}),
+			)
+			console.log("Fields change completed")
+		} catch (error) {
+			console.error("Error in handleFieldsChange:", error)
+		}
 	}
 
 	const handleModeFieldChange = async <PlanK extends keyof ApiConfiguration, ActK extends keyof ApiConfiguration>(
@@ -60,10 +72,13 @@ export const useApiConfigurationHandlers = () => {
 		value: ApiConfiguration[PlanK] & ApiConfiguration[ActK], // Intersection ensures value is compatible with both field types
 		currentMode: Mode,
 	) => {
+		console.log("handleModeFieldChange", { fieldPair, value, currentMode, planActSeparateModelsSetting })
 		if (planActSeparateModelsSetting) {
 			const targetField = fieldPair[currentMode]
+			console.log("Updating single field:", targetField, value)
 			await handleFieldChange(targetField, value)
 		} else {
+			console.log("Updating both fields:", { [fieldPair.plan]: value, [fieldPair.act]: value })
 			await handleFieldsChange({
 				[fieldPair.plan]: value,
 				[fieldPair.act]: value,

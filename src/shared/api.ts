@@ -37,6 +37,7 @@ export type ApiProvider =
 	| "vercel-ai-gateway"
 	| "zai"
 	| "oca"
+	| "aihubmix"
 
 export interface ApiHandlerSecrets {
 	apiKey?: string // anthropic
@@ -44,6 +45,9 @@ export interface ApiHandlerSecrets {
 	awsAccessKey?: string
 	awsSecretKey?: string
 	openRouterApiKey?: string
+	aihubmixApiKey?: string
+	aihubmixBaseUrl?: string
+	aihubmixAppCode?: string
 
 	clineAccountId?: string
 	awsSessionToken?: string
@@ -3706,3 +3710,59 @@ export const qwenCodeModels = {
 } as const satisfies Record<string, ModelInfo>
 export type QwenCodeModelId = keyof typeof qwenCodeModels
 export const qwenCodeDefaultModelId: QwenCodeModelId = "qwen3-coder-plus"
+
+// Aihubmix models - supports multiple providers through unified API
+export const aihubmixModels = {
+	"claude-3-5-sonnet-20241022": {
+		maxTokens: 8192,
+		contextWindow: 200_000,
+		supportsImages: true,
+		supportsPromptCache: true,
+		inputPrice: 3.0,
+		outputPrice: 15.0,
+		cacheWritesPrice: 3.75,
+		cacheReadsPrice: 0.3,
+		description: "Claude 3.5 Sonnet - Latest Anthropic model with enhanced reasoning capabilities",
+	},
+	"claude-3-5-haiku-20241022": {
+		maxTokens: 8192,
+		contextWindow: 200_000,
+		supportsImages: true,
+		supportsPromptCache: true,
+		inputPrice: 0.8,
+		outputPrice: 4.0,
+		cacheWritesPrice: 1.0,
+		cacheReadsPrice: 0.08,
+		description: "Claude 3.5 Haiku - Fast and efficient model for everyday tasks",
+	},
+	"gpt-4o": {
+		maxTokens: 4096,
+		contextWindow: 128_000,
+		supportsImages: true,
+		supportsPromptCache: false,
+		inputPrice: 2.5,
+		outputPrice: 10.0,
+		description: "GPT-4o - OpenAI's flagship multimodal model",
+	},
+	"gpt-4o-mini": {
+		maxTokens: 4096,
+		contextWindow: 128_000,
+		supportsImages: true,
+		supportsPromptCache: false,
+		inputPrice: 0.15,
+		outputPrice: 0.6,
+		description: "GPT-4o Mini - Fast and cost-effective model for most tasks",
+	},
+	"gemini-2.0-flash-exp": {
+		maxTokens: 65536,
+		contextWindow: 1_048_576,
+		supportsImages: true,
+		supportsPromptCache: true,
+		inputPrice: 0.075,
+		outputPrice: 0.3,
+		cacheReadsPrice: 0.01875,
+		description: "Gemini 2.0 Flash - Google's latest experimental model with 1M context",
+	},
+} as const satisfies Record<string, ModelInfo>
+export type AihubmixModelId = keyof typeof aihubmixModels
+export const aihubmixDefaultModelId: AihubmixModelId = "claude-3-5-sonnet-20241022"

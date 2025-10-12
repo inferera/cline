@@ -1,3 +1,4 @@
+import { ApiProvider } from "@shared/api"
 import { StringRequest } from "@shared/proto/cline/common"
 import { Mode } from "@shared/storage/types"
 import { VSCodeTextField } from "@vscode/webview-ui-toolkit/react"
@@ -11,6 +12,7 @@ import { useExtensionState } from "@/context/ExtensionStateContext"
 import { ModelsServiceClient } from "@/services/grpc-client"
 import { highlight } from "../history/HistoryView"
 import { OPENROUTER_MODEL_PICKER_Z_INDEX } from "./OpenRouterModelPicker"
+import { AihubmixProvider } from "./providers/AihubmixProvider"
 import { AnthropicProvider } from "./providers/AnthropicProvider"
 import { AskSageProvider } from "./providers/AskSageProvider"
 import { BasetenProvider } from "./providers/BasetenProvider"
@@ -87,9 +89,21 @@ const ApiOptions = ({ showModelOptions, apiErrorMessage, modelIdErrorMessage, is
 
 	const { selectedProvider } = normalizeApiConfiguration(apiConfiguration, currentMode)
 
+	// Debug: Log state changes
+	useEffect(() => {
+		console.log("ApiConfiguration changed:", {
+			apiConfiguration,
+			planModeApiProvider: apiConfiguration?.planModeApiProvider,
+			actModeApiProvider: apiConfiguration?.actModeApiProvider,
+			selectedProvider,
+			currentMode,
+		})
+	}, [apiConfiguration, selectedProvider, currentMode])
+
 	const { handleModeFieldChange } = useApiConfigurationHandlers()
 
 	const [_ollamaModels, setOllamaModels] = useState<string[]>([])
+	const [forceUpdate, setForceUpdate] = useState(0)
 
 	// Poll ollama/vscode-lm models
 	const requestLocalModels = useCallback(async () => {
@@ -128,6 +142,7 @@ const ApiOptions = ({ showModelOptions, apiErrorMessage, modelIdErrorMessage, is
 		const providers = [
 			{ value: "cline", label: "Cline" },
 			{ value: "openrouter", label: "OpenRouter" },
+			{ value: "aihubmix", label: "Aihubmix" },
 			{ value: "gemini", label: "Google Gemini" },
 			{ value: "openai", label: "OpenAI Compatible" },
 			{ value: "anthropic", label: "Anthropic" },
@@ -208,8 +223,17 @@ const ApiOptions = ({ showModelOptions, apiErrorMessage, modelIdErrorMessage, is
 			: searchableItems
 	}, [searchableItems, searchTerm, fuse, currentProviderLabel])
 
-	const handleProviderChange = (newProvider: string) => {
-		handleModeFieldChange({ plan: "planModeApiProvider", act: "actModeApiProvider" }, newProvider as any, currentMode)
+	const handleProviderChange = async (newProvider: string) => {
+		console.log("handleProviderChange", newProvider)
+		await handleModeFieldChange(
+			{ plan: "planModeApiProvider", act: "actModeApiProvider" },
+			newProvider as ApiProvider,
+			currentMode,
+		)
+
+		// Force component re-render by updating a local state
+		setForceUpdate((prev) => prev + 1)
+
 		setIsDropdownVisible(false)
 		setSelectedIndex(-1)
 	}
@@ -283,6 +307,8 @@ const ApiOptions = ({ showModelOptions, apiErrorMessage, modelIdErrorMessage, is
 
 	As a workaround, we create separate instances of the dropdown for each provider, and then conditionally render the one that matches the current provider.
 	*/
+
+	console.log("selectedProvider111", selectedProvider)
 
 	return (
 		<div style={{ display: "flex", flexDirection: "column", gap: 5, marginBottom: isPopup ? -10 : 0 }}>
@@ -393,6 +419,10 @@ const ApiOptions = ({ showModelOptions, apiErrorMessage, modelIdErrorMessage, is
 
 			{apiConfiguration && selectedProvider === "openrouter" && (
 				<OpenRouterProvider currentMode={currentMode} isPopup={isPopup} showModelOptions={showModelOptions} />
+			)}
+
+			{apiConfiguration && selectedProvider === "aihubmix" && (
+				<AihubmixProvider currentMode={currentMode} isPopup={isPopup} showModelOptions={showModelOptions} />
 			)}
 
 			{apiConfiguration && selectedProvider === "deepseek" && (

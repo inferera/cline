@@ -1,6 +1,8 @@
 import {
 	ApiConfiguration,
 	ApiProvider,
+	aihubmixDefaultModelId,
+	aihubmixModels,
 	anthropicDefaultModelId,
 	anthropicModels,
 	askSageDefaultModelId,
@@ -81,10 +83,17 @@ export function normalizeApiConfiguration(
 	apiConfiguration: ApiConfiguration | undefined,
 	currentMode: Mode,
 ): NormalizedApiConfig {
+	console.log("normalizeApiConfiguration", {
+		apiConfiguration,
+		currentMode,
+		planModeApiProvider: apiConfiguration?.planModeApiProvider,
+		actModeApiProvider: apiConfiguration?.actModeApiProvider,
+	})
 	const provider =
 		(currentMode === "plan" ? apiConfiguration?.planModeApiProvider : apiConfiguration?.actModeApiProvider) || "anthropic"
 	const modelId = currentMode === "plan" ? apiConfiguration?.planModeApiModelId : apiConfiguration?.actModeApiModelId
-
+	console.log("Selected provider:", provider)
+	console.log("Selected modelId:", modelId)
 	const getProviderData = (models: Record<string, ModelInfo>, defaultId: string) => {
 		let selectedModelId: string
 		let selectedModelInfo: ModelInfo
@@ -357,6 +366,13 @@ export function normalizeApiConfiguration(
 				selectedModelId: ocaModelId || "",
 				selectedModelInfo: ocaModelInfo || liteLlmModelInfoSaneDefaults,
 			}
+		case "aihubmix":
+			console.log("Processing aihubmix case:", { aihubmixModels, aihubmixDefaultModelId, modelId })
+			// 使用当前选择的模型ID，如果没有则使用默认模型ID
+			const aihubmixModelId = modelId || aihubmixDefaultModelId
+			const result = getProviderData(aihubmixModels, aihubmixModelId)
+			console.log("Aihubmix result:", result)
+			return result
 		default:
 			return getProviderData(anthropicModels, anthropicDefaultModelId)
 	}

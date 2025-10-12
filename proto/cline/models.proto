@@ -39,6 +39,8 @@ service ModelsService {
   rpc getSapAiCoreModels(SapAiCoreModelsRequest) returns (SapAiCoreModelsResponse);
   // Fetches available models from OCA
   rpc refreshOcaModels(StringRequest) returns (OcaCompatibleModelInfo);
+  // Fetches available models from Aihubmix
+  rpc getAihubmixModels(EmptyRequest) returns (OpenRouterCompatibleModelInfo);
 }
 
 // List of VS Code LM models
@@ -228,6 +230,7 @@ enum ApiProvider {
   QWEN_CODE = 33;
   DIFY = 34;
   OCA = 35;
+  AIHUBMIX = 36;
 }
 
 // Model info for OpenAI-compatible models
